@@ -1,0 +1,31 @@
+version: '2.1'
+
+
+services: # Criando meus serviços.
+  users-db:
+    container_name: users-db # Definindo o nome do Container.
+    build: ./db # Define apartir de que imagem (Dockerfile) o container vai ser construido.
+    ports: # Expose porta HOST:CONTAINER
+      - 5435:5432
+    environment: # Define as variáveis de ambiente dentro do container.
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck: # ????????
+      test: exit 0
+
+  users-service:
+    container_name: users-service
+    build: .
+    volumes: # Cria um volume para persistir dados entre o host e o container.
+      - '.:/usr/src/app'
+    ports:
+      - 5001:5000
+    environment:
+      - APP_SETTINGS=core.config.DevelopmentConfig
+      - DATABASE_URL=postgres://postgres:postgres@users-db:5432/users_dev
+      - DATABASE_TEST_URL=postgres://postgres:postgres@users-db:5432/users_test
+    depends_on:
+      users-db:
+        condition: service_healthy
+    links:
+      - users-db
